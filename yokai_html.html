@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>妖怪ガチャ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1a0020 0%, #000 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.3rem;
+    text-align: center;
+  }
+  .subtitle {
+    color: #aaa;
+    font-size: 0.8rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+  }
+  .card {
+    width: 300px;
+    min-height: 320px;
+    border-radius: 20px;
+    background: #ffffff11;
+    border: 2px solid #ffffff22;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .card.show {
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .card-img {
+    width: 180px;
+    height: 200px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+  .card-emoji {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+  .card-name {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+  }
+  .card-desc {
+    color: #ccc;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.7;
+  }
+  .card-empty {
+    color: #555;
+    font-size: 1rem;
+    text-align: center;
+    line-height: 2;
+  }
+  button {
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    background: transparent;
+    color: #fff;
+    border: 2px solid #ffffff55;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+  button:hover { background: #ffffff18; }
+  button:active { transform: scale(0.96); }
+  .prev {
+    color: #555;
+    font-size: 0.75rem;
+    margin-top: 1.5rem;
+    letter-spacing: 0.1em;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.7) rotate(-4deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+</style>
+</head>
+<body>
+
+<h1>👁 妖怪ガチャ 👁</h1>
+<p class="subtitle">ボタンをおして よびだそう</p>
+
+<div class="card" id="card">
+  <div class="card-empty">？？？<br><span style="font-size:0.75rem">よびだしてみよう</span></div>
+</div>
+
+<button onclick="draw()">よびだす！</button>
+<p class="prev" id="prev"></p>
+
+<script>
+// =============================================
+// 妖怪リスト
+// img: 画像URLを入れる（空文字 "" にすると絵文字表示）
+// emoji: imgが空の場合に表示する絵文字
+// color: カードの背景色（16進数）
+// =============================================
+const yokai = [
+  { name: "ぬりかべ",     emoji: "🧱", img: "https://i.imgur.com/lkFN60Q.jpeg", color: "#7c6f64", desc: "道をふさぐ大きな壁のおばけ" },
+  { name: "かっぱ",       emoji: "🫧", img: "",                                  color: "#4a9e6b", desc: "川にすむ緑のおばけ。キュウリが好き" },
+  { name: "てんぐ",       emoji: "👺", img: "",                                  color: "#c0392b", desc: "山にすむ、鼻が長い赤いおばけ" },
+  { name: "ざしきわらし", emoji: "👻", img: "",                                  color: "#8e6bbf", desc: "家にすむ子どものおばけ。いると家が栄える" },
+  { name: "おにび",       emoji: "🔥", img: "",                                  color: "#2980b9", desc: "夜に光るふわふわした青い火のおばけ" },
+  { name: "かまいたち",   emoji: "🌪️", img: "",                                  color: "#7f8c8d", desc: "つむじ風にかくれた鎌を持つおばけ" },
+  { name: "ろくろくび",   emoji: "🦒", img: "",                                  color: "#d4a017", desc: "首がにょーんと長くなるおばけ" },
+  { name: "きつねび",     emoji: "🦊", img: "",                                  color: "#e67e22", desc: "きつねが化けて出す不思議な火" },
+  { name: "おとろし",     emoji: "😱", img: "",                                  color: "#6d4c41", desc: "神社の鳥居の上にいるもじゃもじゃのおばけ" },
+  { name: "ぬえ",         emoji: "🦅", img: "",                                  color: "#1a252f", desc: "いろんな動物が合わさった空飛ぶおばけ" },
+  { name: "ゆきおんな",   emoji: "❄️", img: "",                                  color: "#85c1e9", desc: "雪の夜に現れる白くて美しいおばけ" },
+  { name: "からかさこぞう",emoji: "☂️", img: "",                                 color: "#e91e63", desc: "古い傘が化けたおばけ。一つ目で舌を出す" },
+  { name: "あずきとぎ",   emoji: "🌊", img: "",                                  color: "#1565c0", desc: "川でシャキシャキ音をたてるおばけ" },
+  { name: "おおにゅうどう",emoji: "🗿", img: "",                                 color: "#37474f", desc: "どんどん大きくなる巨大なおばけ" },
+  { name: "ねこまた",     emoji: "🐱", img: "",                                  color: "#f39c12", desc: "年老いた猫が化けたおばけ。しっぽが二本" },
+];
+
+let current = null;
+
+function draw() {
+  const pool = yokai.filter(y => y !== current);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (current) document.getElementById('prev').textContent = 'まえ：' + current.name;
+  current = pick;
+  render(pick);
+}
+
+function render(y) {
+  const card = document.getElementById('card');
+  card.style.background = y.color + '22';
+  card.style.borderColor = y.color + '88';
+  card.className = 'card';
+  void card.offsetWidth; // reflow for animation restart
+  card.className = 'card show';
+
+  if (y.img) {
+    card.innerHTML = `
+      <img class="card-img" src="${y.img}" alt="${y.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="card-emoji" style="display:none">${y.emoji}</div>
+      <div class="card-name">${y.name}</div>
+      <div class="card-desc">${y.desc}</div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="card-emoji">${y.emoji}</div>
+      <div class="card-name">${y.name}</div>
+      <div class="card-desc">${y.desc}</div>
+    `;
+  }
+}
+</script>
+</body>
+</html>
