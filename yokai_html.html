@@ -118,12 +118,6 @@
 <p class="prev" id="prev"></p>
 
 <script>
-// =============================================
-// 妖怪リスト
-// img: 画像URLを入れる（空文字 "" にすると絵文字表示）
-// emoji: imgが空の場合に表示する絵文字
-// color: カードの背景色（16進数）
-// =============================================
 const yokai = [
   { name: "ぬりかべ",       emoji: "🧱", img: "https://i.imgur.com/CP0314l.png",  color: "#7c6f64", desc: "道をふさぐ大きな壁のおばけ" },
   { name: "かっぱ",         emoji: "🫧", img: "https://i.imgur.com/N796r3f.png",  color: "#4a9e6b", desc: "川にすむ緑のおばけ。キュウリが好き" },
@@ -145,6 +139,15 @@ const yokai = [
   { name: "百目",           emoji: "👁️", img: "https://i.imgur.com/1UQHoNP.jpeg", color: "#1a0a2e", desc: "全身に無数の目を持つ不気味なおばけ" },
 ];
 
+window.addEventListener('load', () => {
+  yokai.forEach(y => {
+    if (y.img) {
+      const img = new Image();
+      img.src = y.img;
+    }
+  });
+});
+
 let current = null;
 
 function draw() {
@@ -160,7 +163,7 @@ function render(y) {
   card.style.background = y.color + '22';
   card.style.borderColor = y.color + '88';
   card.className = 'card';
-  void card.offsetWidth; // reflow for animation restart
+  void card.offsetWidth;
   card.className = 'card show';
 
   if (y.img) {
